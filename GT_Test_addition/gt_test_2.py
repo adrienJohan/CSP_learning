@@ -113,3 +113,94 @@ if money_solutions:
 else:
     print("Aucune solution trouvee.")
 print("Recherche terminee.")
+
+"""### Modélisation du Problème CSP: ISA + ROA = TELO
+
+**Objectif**: Affecter un chiffre unique (1-9) à chaque lettre de manière à ce que l'addition soit correcte.
+
+**Variables**:
+Les variables du problème sont les lettres uniques présentes dans l'équation:
+`I, S, A, R, O, T, E, L`
+
+Pour modéliser l'addition avec les retenues, nous introduirons également des variables pour les retenues (`C1, C2, C3`), une pour chaque colonne d'addition (de droite à gauche).
+
+**Domaines**:
+*   Pour toutes les lettres `I, S, A, R, O, T, E, L`, leur domaine est `[1, 2, 3, 4, 5, 6, 7, 8, 9]` car elles ne peuvent pas être zéro et le problème spécifie l'intervalle 1-9.
+*   Pour les retenues `C1, C2, C3`, leur domaine est `[0, 1]` car l'addition de deux chiffres (plus une retenue potentielle) ne peut générer une retenue supérieure à 1.
+
+**Contraintes**:
+Les contraintes sont de plusieurs types:
+
+1.  **Contrainte d'unicité**: Chaque lettre doit représenter un chiffre différent.
+    *   `AllDifferent(I, S, A, R, O, T, E, L)`
+
+2.  **Contraintes arithmétiques** (basées sur l'addition colonne par colonne, de droite à gauche, en incluant les retenues):
+    *   **Colonne des unités (A + A)**:
+        `A + A = O + 10 * C1`
+    *   **Colonne des dizaines (S + O + C1)**:
+        `S + O + C1 = L + 10 * C2`
+    *   **Colonne des centaines (I + R + C2)**:
+        `I + R + C2 = E + 10 * C3`
+    *   **Colonne des milliers (C3)**:
+        `C3 = T` (la retenue finale devient T)
+
+C'est la modélisation complète du problème ISA + ROA = TELO en tant que Problème de Satisfaction de Contraintes.
+"""
+
+def solve_isa_roa_telo():
+    letters = ['I', 'S', 'A', 'R', 'O', 'T', 'E', 'L']
+    solutions = []
+
+    # Iterate through all permutations of digits 1-9 for the letters
+    for assignment_values in itertools.permutations(range(1, 10), len(letters)): # Digits 1-9
+        assignment = dict(zip(letters, assignment_values))
+
+        # Extract values for readability
+        I, S, A = assignment['I'], assignment['S'], assignment['A']
+        R, O = assignment['R'], assignment['O']
+        T, E, L = assignment['T'], assignment['E'], assignment['L']
+
+        # Verify arithmetic constraints column by column, managing carries
+        # Units column: A + A = O + 10 * C1
+        sum_AA = A + A
+        if sum_AA % 10 != O:
+            continue
+        C1 = sum_AA // 10
+
+        # Tens column: S + O + C1 = L + 10 * C2
+        sum_SOC1 = S + O + C1
+        if sum_SOC1 % 10 != L:
+            continue
+        C2 = sum_SOC1 // 10
+
+        # Hundreds column: I + R + C2 = E + 10 * C3
+        sum_IRC2 = I + R + C2
+        if sum_IRC2 % 10 != E:
+            continue
+        C3 = sum_IRC2 // 10
+
+        # Thousands column: C3 = T
+        if C3 != T:
+            continue
+
+        # If all constraints are satisfied, we found a solution
+        solutions.append(assignment)
+
+    return solutions
+
+import itertools
+
+
+
+# Execute the solver and display results
+print("Debut de la resolution du probleme ISA + ROA = TELO...")
+telo_solutions = solve_isa_roa_telo()
+
+if telo_solutions:
+    print(f"\n{len(telo_solutions)} solution(s) trouvee(s) :")
+    for sol in telo_solutions:
+        print(f"  I={sol['I']}, S={sol['S']}, A={sol['A']}, R={sol['R']}, O={sol['O']}, T={sol['T']}, E={sol['E']}, L={sol['L']}")
+        print(f"  {sol['I']}{sol['S']}{sol['A']} + {sol['R']}{sol['O']}{sol['A']} = {sol['T']}{sol['E']}{sol['L']}{sol['O']}")
+else:
+    print("Aucune solution trouvee.")
+print("Recherche terminee.")
